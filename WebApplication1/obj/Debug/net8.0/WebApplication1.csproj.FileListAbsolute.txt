@@ -140,3 +140,4 @@ C:\Users\vitor\RiderProjects\WebApplication1\WebApplication1\bin\Debug\net8.0\Mi
 C:\Users\vitor\RiderProjects\WebApplication1\WebApplication1\bin\Debug\net8.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
 C:\Users\vitor\RiderProjects\WebApplication1\WebApplication1\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\vitor\RiderProjects\WebApplication1\WebApplication1\bin\Debug\net8.0\Newtonsoft.Json.Bson.dll
+C:\Users\vitor\RiderProjects\WebApplication1\WebApplication1\obj\Debug\net8.0\WebApplication1.sourcelink.json

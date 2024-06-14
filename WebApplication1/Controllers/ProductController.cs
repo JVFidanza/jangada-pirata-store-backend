@@ -1,10 +1,8 @@
-﻿using AutoMapper;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApplication1.Data;
 using WebApplication1.Data.Dtos;
-using WebApplication1.Models;
+using WebApplication1.Interfaces.Service;
 
 namespace WebApplication1.Controllers;
 
@@ -12,97 +10,91 @@ namespace WebApplication1.Controllers;
 [Route("[controller]")]
 public class ProductController : ControllerBase
 {
-    private StoreContext _context;
-    private IMapper _mapper;
+    private IProductService _productService;
 
-    public ProductController(StoreContext context, IMapper mapper)
+    public ProductController(IProductService productService)
     {
-        _context = context;
-        _mapper = mapper;
+        _productService = productService;
     }
     
     [HttpGet]
     public IActionResult GetAllProducts([FromQuery] int take, [FromQuery] int skip = 0)
     {
-        var productList = _context.Products;
+        var allProducts = _productService.GetAllProducts(take, skip);
         
-        return take != default ? Ok(productList.Skip(skip).Take(take)) : Ok(productList.Skip(skip));
+        return Ok(allProducts);
     }
     
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetProductById(int id)
     {
-        var product = await _context.Products.FindAsync(id);
-
-        if (product == null)
-            return NotFound();
-        return Ok(product);
+        try
+        {
+            var product = await _productService.GetProductById(id);
+            return Ok(product);
+        }
+        catch (ArgumentException e)
+        {
+            return NotFound(e.Message);
+        }
     }
     
     [HttpPost]
     public async Task<IActionResult> AddProduct([FromBody] CreateProductDto productDto)
     {
-        Product product = _mapper.Map<Product>(productDto); 
-        
-        var createdProduct = await _context.Products.AddAsync(product);
-        await _context.SaveChangesAsync();
+        var createdProduct = await _productService.AddProduct(productDto);
         
         return CreatedAtAction(nameof(GetProductById),
             new { id = createdProduct.Entity.Id },
-            product);
+            createdProduct);
     }
 
     [HttpPut]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto updateProductDto)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(
-            p => p.Id == id);
+        try
+        {
+            await _productService.UpdateProduct(id, updateProductDto);
 
-        if (product == null)
-            return NotFound();
-
-        _mapper.Map(updateProductDto, product);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+            return NoContent();
+        }
+        catch (ArgumentException e)
+        {
+            return NotFound(e.Message);
+        }
     }
     
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> PatchProduct(int id,
         [FromBody] JsonPatchDocument<UpdateProductDto> patch)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(
-            p => p.Id == id);
-        if (product == null)
-            return NotFound();
-        
-        var productToUpdateDto = _mapper.Map<UpdateProductDto>(product);
-        
-        patch.ApplyTo(productToUpdateDto, ModelState);
-
-        if (!TryValidateModel(productToUpdateDto))
+        try
         {
-            return ValidationProblem(ModelState);
+            await _productService.PatchProduct(id, patch);
+
+            return NoContent();
         }
-
-        _mapper.Map(productToUpdateDto, product);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        catch (ArgumentException e)
+        {
+            return NotFound(e.Message);
+        }        
+        catch (ValidationException e)
+        {
+            return ValidationProblem(e.Message);
+        }
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(
-            p => p.Id == id);
-
-        if (product == null)
-            return NotFound();
-        
-        _context.Remove<Product>(product);
-        await _context.SaveChangesAsync();
-        
-        return NoContent();
+        try
+        {
+            await _productService.DeleteProduct(id);
+            return NoContent();
+        }
+        catch (ArgumentException e)
+        {
+            return NotFound(e.Message);
+        }
     }
 }

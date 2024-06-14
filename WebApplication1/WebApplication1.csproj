@@ -24,4 +24,8 @@
       <Compile Remove="Data\ProductContext.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Interfaces\Repositories\" />
+    </ItemGroup>
+
 </Project>
